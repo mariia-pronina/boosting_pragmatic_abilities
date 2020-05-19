@@ -1,1 +1,46 @@
 
+data = pd.read_csv('./1.csv', sep = ';', header = None)
+
+data.dropna(inplace=True)
+rows = data.shape[0]
+dist_matrix = np.ones((rows, rows)) * 2
+
+for i in np.arange(rows):
+    for j in np.arange(i):
+        dist_matrix[i][j] = scipy.spatial.distance.cosine(data.iloc[i,:], data.iloc[j,:])
+		
+'''
+
+'''
+group1 = np.array([])
+group2 = np.array([])
+
+while len(group1) < int(rows/2) and len(group2) < int(rows/2):
+    min_index = np.unravel_index(np.argmin(dist_matrix, axis=None), dist_matrix.shape)
+    #print(min_index)
+    if (np.sum(min_index[0] == group1) > 0 or np.sum(min_index[0] == group2) > 0) and (np.sum(min_index[1] == group1) > 0 or np.sum(min_index[1] == group2) > 0):
+        dist_matrix[min_index] = 2
+        continue
+    elif np.sum(min_index[0] == group1) > 0 or np.sum(min_index[0] == group2) > 0:
+        if np.sum(min_index[0] == group1) > 0:
+            group2 = np.append(group2, min_index[1])
+        else:
+            group1 = np.append(group1, min_index[1])
+    elif np.sum(min_index[1] == group1) > 0 or np.sum(min_index[1] == group2) > 0:
+        if np.sum(min_index[1] == group1) > 0:
+            group2 = np.append(group2, min_index[0])
+        else:
+            group1 = np.append(group1, min_index[0])
+    else:
+        group1 = np.append(group1, min_index[0])
+        group2 = np.append(group2, min_index[1])
+    dist_matrix[min_index] = 2
+    
+used = np.append(group1, group2)
+all = set(np.arange(rows))
+found = set(used)
+other = np.array(list(all.difference(found)))
+if len(group1) < len(group2):
+    group1 = np.append(group1, other)
+else:
+    group2 = np.append(group2, other)
